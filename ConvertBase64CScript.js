@@ -1,11 +1,11 @@
 /**
- * @NApiVersion 2.1
+ * @NApiVersion 2.x
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(['N/record', 'N/recordContext', 'N/search', 'N/https', 'N/http'],
+define([],
 
-    function (record, recordContext, render, search, serverWidget, currentRecord, https, http) {
+    function () {
 
         /**
          * Function to be executed after page is initialized.
@@ -17,52 +17,6 @@ define(['N/record', 'N/recordContext', 'N/search', 'N/https', 'N/http'],
          * @since 2015.2
          */
         function pageInit(scriptContext) {
-
-        }
-
-        function artApprovalCLCSubmit(dataObj) {
-            try{
-
-                var apiUrl = "https://clientapiqa.brandmanager360.com/"
-
-                const objData = {
-                    username: "netsuite api_12034",
-                    password: "uL#+*6m^-ig091}L@dySH:K(Q6",
-                    grantType: "password"
-                };
-
-                let loginResponse = https.post({
-                        body: objData,
-                        headers: [],
-                        url: apiUrl
-                });
-
-            }catch (e) {
-                log.debug("Error", e)
-            }
-
-
-
-        }
-
-        function loginRequest() {
-                alert("This is art approval")
-
-                var apiUrl = "https://clientapiqa.brandmanager360.com/"
-
-                var objData = {
-                    "username": "netsuite api_12034",
-                    "password": "uL#+*6m^-ig091}L@dySH:K(Q6",
-                    "grant_type": "password"
-                };
-                let loginResponse = https.post({
-                    url: apiUrl+"Token",
-                    headers:{"Content-Type" : "application/x-www-form-urlencoded",
-                        "Cache-Control" : "no-cache"},
-                    body: objData
-                });
-
-                console.log(JSON.stringify(loginResponse))
 
         }
 
@@ -195,13 +149,66 @@ define(['N/record', 'N/recordContext', 'N/search', 'N/https', 'N/http'],
          * @since 2015.2
          */
         function saveRecord(scriptContext) {
+            let rec = scriptContext.currentRecord
+
+            let imgURL = rec.getValue({
+                fieldId: 'custitem_lf_image_url'
+            })
+
+
+
+            function onImageChange(event) {
+                const imgUrl = "https://d1nyf670ujuw7h.cloudfront.net/Logoed-Images/1015-nvy-w67758.jpg";
+                createImage(imgUrl, convertImage);
+            }
+
+
+            function createImage(imageFile, callback) {
+                const image = document.createElement('img');
+                image.onload = () => callback(image);
+                image.setAttribute('src', imageFile);
+            }
+
+            function convertImage(image) {
+                const canvas = drawImageToCanvas(image);
+                const ctx = canvas.getContext('2d');
+
+                let result = [];
+                for (let y = 0; y < canvas.height; y++) {
+                    result.push([]);
+                    for (let x = 0; x < canvas.width; x++) {
+                        let data = ctx.getImageData(x, y, 1, 1).data;
+                        result[y].push(data[0]);
+                        result[y].push(data[1]);
+                        result[y].push(data[2]);
+                    }
+                }
+
+                // async function img2BufferArray(imgUrl) {
+            //     let headers = new Headers()
+            //     let buffArray = [];
+            //     await fetch(imgUrl, {
+            //         method: "GET",
+            //         mode: "cors",
+            //         crossorigin: true,
+            //         body: null
+            //     })
+            //         .then(r => r.arrayBuffer())
+            //         .then(buff => {
+            //             buffArray = new Int8Array(buff);
+            //             return buffArray;
+            //         });
+            // }
+
+            // Call the function
+            let imgData =   img2BufferArray(imgUrl);
+
+            console.log('imgData: ', imgData);
+
 
         }
 
-
         return {
-            loginRequest: loginRequest,
-            artApprovalCLCSubmit: artApprovalCLCSubmit,
             pageInit: pageInit,
             fieldChanged: fieldChanged,
             postSourcing: postSourcing,

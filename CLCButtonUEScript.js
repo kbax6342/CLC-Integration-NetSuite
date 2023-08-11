@@ -26,6 +26,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
             try {
                 var retailerCode;
+                var object;
                 const form = scriptContext.form
 
                 var rec = scriptContext.newRecord
@@ -41,7 +42,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                 const description = rec.getValue({
                     fieldId: 'custitem_lf_art_approval_description'
                 })
-
+                //false pending true approved denied approved with changes
                 const orderPending = rec.getValue({
                     fieldId: 'custitem_lf_weld_license_approved'
                 });
@@ -54,7 +55,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     fieldId: 'custitemlogofit_category_code'
                 })
 
-                const itemName = rec.getValue({
+                const itemName = rec.getText({
                     fieldId: 'itemid'
                 })
 
@@ -67,14 +68,13 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                 })
 
 
-
                 var customerSearchObj = search.create({
                     type: "customer",
                     filters:
                         [
-                            ["custentity_lf_school_record","anyof", schoolRecordValue],
+                            ["custentity_lf_school_record", "anyof", schoolRecordValue],
                             "AND",
-                            ["parentcustomer.entityid","isempty",""]
+                            ["parentcustomer.entityid", "isempty", ""]
                         ],
                     columns:
                         [
@@ -85,30 +85,29 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                             })
                         ]
                 });
-                var searchResultCount = customerSearchObj.runPaged().count;
+                var searchResultCount = customerSearchObj.run().getRange(0, 100);
 
-                customerSearchObj.run().each(function(result){
-                    // .run().each has a limit of 4,000 results
-                    // retailerCode = result.getValue({
-                    //     fieldId: 'custentity_lf_retailer_code'
-                    // })
 
-                   var object = JSON.parse(result.values)
+                customerSearchObj.run().each(function (result) {
 
-                    log.debug("school record", object)
-                    return true;                });
+                    var fieldLookup = search.lookupFields({
+                        type: search.Type.CUSTOMER,
+                        id: result.id,
+                        columns: ['entityid']
 
-                /*
-                customerSearchObj.id="customsearch1691438600745";
-                customerSearchObj.title="LF | School - Customer Search - KB (copy)";
-                var newSearchId = customerSearchObj.save();
-                */
+                    })
+
+                    retailerCode = fieldLookup.entityid
+
+                    return true;
+                });
 
 
                 const dataObj = JSON.stringify({
                     color,
                     lfUpcCode,
                     itemName,
+                    artFileNames,
                     categoryCode,
                     description,
                     orderPending,
@@ -116,22 +115,21 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     retailerCode,
                 })
 
-                form.clientScriptModulePath = "SuiteScripts/CLCIntegration/ArtApprovalSubmitCScript.js"
+                //form.clientScriptModulePath = "SuiteScripts/CLCIntegration/ArtApprovalSubmitCScript.js"
+
+                form.clientScriptModulePath = "SuiteScripts/CLCIntegration/httpsrequestClientScript.js"
+
+
 
 
                 form.addButton({
                     id: 'custpage_CLCArtApprovalSubmit',
-                    label: 'Send Approval',
+                    label: 'Send Art Approval CLC',
                     functionName: `artApprovalCLCSubmit(${dataObj})`
 
-
                 })
 
-                form.addButton({
-                    id: 'custpage_CLCArtApprovalUpdate',
-                    label: 'Update Approval',
-                    functionName: 'artApprovalCLCSubmit'
-                })
+
 
             } catch (e) {
                 log.debug("Error", e)
@@ -149,17 +147,6 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
          * @since 2015.2
          */
         const beforeSubmit = (scriptContext) => {
-
-            const record = scriptContext.newRecord
-
-
-            fileOutput = (event) => {
-                if (event.target.files && event.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = event => fileOut.innerHTML = event.target.result;
-                    return reader.readAsText(event.target.files[0]);
-                }
-            }
 
 
         }
