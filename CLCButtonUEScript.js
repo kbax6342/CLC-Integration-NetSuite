@@ -67,6 +67,10 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     fieldId: 'custitem_lf_hybrid'
                 })
 
+                const awsURL = rec.getValue({
+                    fieldId: 'custitem_lf_aws_url'
+                })
+
 
                 var customerSearchObj = search.create({
                     type: "customer",
@@ -113,6 +117,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     orderPending,
                     subCatCode,
                     retailerCode,
+                    awsURL
                 })
 
                 //form.clientScriptModulePath = "SuiteScripts/CLCIntegration/ArtApprovalSubmitCScript.js"
@@ -127,6 +132,12 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     label: 'Send Art Approval CLC',
                     functionName: `artApprovalCLCSubmit(${dataObj})`
 
+                })
+
+                form.addButton({
+                    id: "custpage_RequestImage",
+                    label: "Convert Image",
+                    functionName: 'convertImage'
                 })
 
 

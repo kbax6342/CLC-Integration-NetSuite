@@ -58,7 +58,7 @@ define(['N/record', 'N/recordContext', 'N/search', 'N/https', 'N/http'],
                 let loginResponse = https.post({
                     url: apiUrl+"Token",
                     headers:{"Content-Type" : "application/x-www-form-urlencoded",
-                        "Cache-Control" : "no-cache"},
+                            "Cache-Control" : "no-cache"},
                     body: objData
                 });
 
