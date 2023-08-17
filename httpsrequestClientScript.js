@@ -80,29 +80,37 @@ define(['N/https'],
                 }
 
                 let headersObj = {
-                    "Access-Control-Allow-Origin" : "*"
+                    "Access-Control-Allow-Origin": "*"
                 }
 
-               var response = https.get({
-                   url: 'https://d1nyf670ujuw7h.cloudfront.net/Logoed-Images/1015-nvy-w67758.jpg',
-                   headers: headersObj
-               })
-                var base64Image = JSON.parse(response.body)
+                var response = https.get({
+                    url: 'https://d1nyf670ujuw7h.cloudfront.net/Logoed-Images/1015-nvy-w67758.jpg',
+                    headers: headersObj
+                })
 
-                console.log(base64Image)
 
-                function base64ToArrayBuffer(base64){
+                var base64ImageUndecodedString = JSON.stringify(response.body)
+
+
+                //encode string javascript
+                var base64ImageEncodeString = btoa(base64ImageUndecodedString)
+
+
+                function base64ToArrayBuffer(base64) {
                     var binaryString = atob(base64);
-                    console.log(binaryString)
+
                     var bytes = new Uint8Array(binaryString.length);
-                    console.log(bytes)
-                    for(var i =0; i < binaryString.length; i++){
+
+                    for (var i = 0; i < binaryString.length; i++) {
                         bytes[i] = binaryString.charCodeAt(i)
                     }
-                    return bytes.buffer
+                    return bytes
                 }
 
-               console.log(base64ToArrayBuffer(base64Image));
+                var artFileData = base64ToArrayBuffer(base64ImageEncodeString)
+
+
+
 
                 var bodyOBJ = {
                     "Description": descriptionObj,
@@ -121,14 +129,11 @@ define(['N/https'],
                     "Upis": itemNameObj,
                     "SelectedProductCombinations":
                         [
-                            {"CategoryCode":"01C-1", "SubcategoryCode":"1", "DistributionChannels":["camp","GDC"]}
+                            {"CategoryCode": "01C-1", "SubcategoryCode": "1", "DistributionChannels": ["camp", "GDC"]}
                         ],
                     "ArtFileName": itemNameObj,
-                    "ArtFileData": [" "]
+                    "ArtFileData": artFileData
                 }
-
-
-
 
 
                 let submitAApproval = https.post({
@@ -136,7 +141,6 @@ define(['N/https'],
                     headers: headers,
                     body: JSON.stringify(bodyOBJ)
                 });
-
 
 
             } catch (e) {
