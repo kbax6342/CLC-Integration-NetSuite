@@ -3,11 +3,11 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(['N/https'],
+define(['N/https','N/ui/message'],
     /**
      * @param{https} https
      */
-    function (https) {
+    function (https, message) {
 
         /**
          * Function to be executed after page is initialized.
@@ -27,31 +27,8 @@ define(['N/https'],
 
             try {
 
-                var customNumber = Math.floor(Math.random(23));
-                var colorObj = dataObj.color[0]
-                var descriptionObj = dataObj.description[0]
-                var orderPendingObj = dataObj.orderPending
-                var lfUpcCodeObj = dataObj.lfUpcCode
-                //var artFileNames = dataObj.artFileNames[0]
-                var categoryCodeObj = dataObj.categoryCode[0]
-                var itemNameObj = dataObj.itemName
-                var retailerCodeObj = dataObj.retailerCode
-                var subCatCodeObj = dataObj.subCatCode
-                var awsURL = dataObj.awsURL
-
-                var number = 6
-
-                var idNumber = Math.random().toString(36).substring(2, number + 2);
-                var designNumber = "LF" + Math.random().toString(36).substring(2, number + 2);
-                var retailerName = "LogoFit LLC"
-                var supplierID = 10234
-                var emailList = "atyler@logofit.com"
-                var blankGoods = true;
-                var additionalInfo = " ";
-
                 var apiUrl = "https://clientapiqa.brandmanager360.com/";
                 var urlString = "https://clientapiqa.brandmanager360.com/Artwork/SubmitArtwork"
-
 
                 var objData = {
                     "username": "netsuite api_12034",
@@ -68,9 +45,9 @@ define(['N/https'],
                     body: objData
                 });
 
+                console.log(loginResponse)
 
                 var parsedData = JSON.parse(loginResponse.body)
-
 
                 var bearer = "bearer " + parsedData.access_token
 
@@ -84,63 +61,119 @@ define(['N/https'],
                 }
 
                 var response = https.get({
-                    url: 'https://d1nyf670ujuw7h.cloudfront.net/Logoed-Images/1015-nvy-w67758.jpg',
+                    url: dataObj.awsImageUrl,
                     headers: headersObj
                 })
 
+                //variable to store the base64 image string from a get request of a pdf image
+                var base64ImageString = response.body
 
-                var base64ImageUndecodedString = JSON.stringify(response.body)
+                //function to covert base64 image string to a decoded format
+                var base64ImageDecodedString = atob(base64ImageString)
 
 
-                //encode string javascript
-                var base64ImageEncodeString = btoa(base64ImageUndecodedString)
+                var liCodeText = dataObj.licenseCode
 
 
-                function base64ToArrayBuffer(base64) {
-                    var binaryString = atob(base64);
-
-                    var bytes = new Uint8Array(binaryString.length);
-
-                    for (var i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i)
-                    }
-                    return bytes
+                const subCatCode = (categoryCode) => {
+                    const part = categoryCode.split('-')
+                    return part.at(1)
                 }
 
-                var artFileData = base64ToArrayBuffer(base64ImageEncodeString)
+                const fileName = (awsImageUrl) => {
+                    const part = awsImageUrl.split('/')
+                    return part.at(-1)
+                }
+
+                const categoryCode = (categoryString) => {
+                    const code = categoryString.split('-')
+                    return code.at(0)
+                }
+
+                const liCode = (liCodeText) => {
+                    const part = liCodeText.split(" ")
+                    return part.at(2)
+                }
+
+                var description = dataObj.description
+                var lincenseCode = liCode(liCodeText)
+                var designNo = dataObj.itemName
+                var colors = dataObj.color
+                var orderPending = true
+                var retailerName = dataObj.retailerCode
+                var blankGoods = true
+                var supplierId = 19368
+                var additionalInfo = dataObj.addInfo
+                var selectedApplication = dataObj.logoApplication
+                var selectedMaterials = dataObj.materialContents
+                var emailList = "licensing@logofit.com, art@logofit.com"
+                var customId = Math.floor(Math.random() * 100)
+                var upis = Math.floor(Math.random() * 100)
+                var distributionChannel = dataObj.dChannel
+                var categoryString =  dataObj.categoryC
+                var artFileName = fileName(dataObj.awsImageUrl)
+                var artFileData = base64ImageString
 
 
-
-
-                var bodyOBJ = {
-                    "Description": descriptionObj,
-                    "LicenseCode": "CLC",
-                    "DesignNo": itemNameObj + "-" + customNumber,
-                    "Colors": colorObj,
-                    "OrderPending": orderPendingObj,
+                var artSubmitBGTrue = {
+                    "Description": description,
+                    "LicenseCode": lincenseCode,
+                    "DesignNo": designNo,
+                    "Colors": colors,
+                    "OrderPending": orderPending,
                     "RetailerName": retailerName,
                     "BlankGoods": blankGoods,
-                    "SupplierId": supplierID,
+                    "SupplierId": supplierId,
                     "AdditionalInfo": additionalInfo,
-                    "SelectedLogoApplications": ["DigitalPrint"],
-                    "SelectedMaterialContents": ["Cotton"],
+                    "SelectedLogoApplications": [selectedApplication],
+                    "SelectedMaterialContents": [selectedMaterials],
                     "EmailsList": emailList,
-                    "CustomId": itemNameObj + " - " + idNumber,
-                    "Upis": itemNameObj,
+                    "CustomId": customId,
+                    "Upis": upis,
                     "SelectedProductCombinations":
                         [
-                            {"CategoryCode": "01C-1", "SubcategoryCode": "1", "DistributionChannels": ["camp", "GDC"]}
+                            {
+                                "CategoryCode": categoryCode(categoryString),
+                                "SubcategoryCode": subCatCode(categoryString),
+                                "DistributionChannels": [distributionChannel]
+                            }
                         ],
-                    "ArtFileName": itemNameObj,
+                    "ArtFileName": artFileName,
                     "ArtFileData": artFileData
                 }
-
 
                 let submitAApproval = https.post({
                     url: urlString,
                     headers: headers,
-                    body: JSON.stringify(bodyOBJ)
+                    body: JSON.stringify(artSubmitBGTrue)
                 });
+
+
+                if(submitAApproval.code === 200){
+
+                    let myMsg = message.create({
+                        title: 'CLC Submission',
+                        message: 'The Art Submission Was Submitted Successfully',
+                        type: message.Type.CONFIRMATION
+                    });
+
+                    myMsg.show({
+                        duration: 7000 // will disappear after 5s
+                    });
+
+                } else {
+                    let myMsg = message.create({
+                        title: 'CLC Submission',
+                        message: 'The Art Submission Was Not Submitted Successfully',
+                        type: message.Type.ERROR
+                    });
+
+                    myMsg.show({
+                        duration: 5000 // will disappear after 5s
+                    });
+                }
+
+
 
 
             } catch (e) {

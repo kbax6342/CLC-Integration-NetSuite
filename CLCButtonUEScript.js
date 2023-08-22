@@ -21,103 +21,87 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
          * @since 2015.2
          */
 
-        var fileOutput = "";
         const beforeLoad = (scriptContext) => {
 
             try {
-                var retailerCode;
-                var object;
+
                 const form = scriptContext.form
 
                 var rec = scriptContext.newRecord
 
-                const color = rec.getText({
-                    fieldId: 'custitem_lf_color_matrix'
+                var color = rec.getText({
+                    fieldId: "custrecord_lf_item_color"
                 })
 
-                const lfUpcCode = rec.getValue({
-                    fieldId: 'upccode'
+
+                var lfUpcCode = rec.getText({
+                    fieldId: "custrecord_lf_item_number"
                 })
 
-                const description = rec.getValue({
-                    fieldId: 'custitem_lf_art_approval_description'
+                var itemName = rec.getText({
+                    fieldId: "custrecord_lf_item_number"
                 })
-                //false pending true approved denied approved with changes
-                const orderPending = rec.getValue({
-                    fieldId: 'custitem_lf_weld_license_approved'
+
+                var awsImageUrl = rec.getValue({
+                    fieldId: 'custrecord_lf_image_aws_url'
+                })
+
+                var customer = rec.getValue({
+                    fieldId: 'custrecord_lf_customer'
+                })
+
+                var logoApplication = rec.getText({
+                    fieldId: 'custrecord_lf_logo_application'
+                })
+
+                var materialContents = rec.getText({
+                    fieldId: 'custrecord_lf_material_contents'
+                })
+
+                var retailerCode = rec.getValue({
+                    fieldId: 'custrecord_lf_retailer_code'
+                })
+
+                var licenseCode = rec.getText({
+                    fieldId: 'custrecord_lf_roy_code'
+                })
+
+                var categoryC = rec.getValue({
+                    fieldId: 'custrecord_lf_cat_code'
                 });
 
-                const artFileNames = rec.getValue({
-                    fieldId: 'custitem_lf_art_file_ap'
+
+                var description = rec.getValue({
+                    fieldId: 'custrecord_lf_short_description'
                 })
 
-                const categoryCode = rec.getValue({
-                    fieldId: 'custitemlogofit_category_code'
+                var orderPending = rec.getValue({
+                    fieldId: 'custrecord_lf_lic_approved_box'
                 })
 
-                const itemName = rec.getText({
-                    fieldId: 'itemid'
+                var dChannel = rec.getText({
+                    fieldId: 'custrecord_lf_dist_channel'
                 })
 
-                const schoolRecordValue = rec.getValue({
-                    fieldId: 'custitem_lf_school'
+                var addInfo = rec.getValue({
+                    fieldId: 'custrecord_lf_comments_to_lic'
                 })
-
-                const subCatCode = rec.getValue({
-                    fieldId: 'custitem_lf_hybrid'
-                })
-
-                const awsURL = rec.getValue({
-                    fieldId: 'custitem_lf_aws_url'
-                })
-
-
-                var customerSearchObj = search.create({
-                    type: "customer",
-                    filters:
-                        [
-                            ["custentity_lf_school_record", "anyof", schoolRecordValue],
-                            "AND",
-                            ["parentcustomer.entityid", "isempty", ""]
-                        ],
-                    columns:
-                        [
-                            "custentity_lf_school_record",
-                            search.createColumn({
-                                name: "entityid",
-                                sort: search.Sort.ASC
-                            })
-                        ]
-                });
-                var searchResultCount = customerSearchObj.run().getRange(0, 100);
-
-
-                customerSearchObj.run().each(function (result) {
-
-                    var fieldLookup = search.lookupFields({
-                        type: search.Type.CUSTOMER,
-                        id: result.id,
-                        columns: ['entityid']
-
-                    })
-
-                    retailerCode = fieldLookup.entityid
-
-                    return true;
-                });
-
 
                 const dataObj = JSON.stringify({
                     color,
                     lfUpcCode,
                     itemName,
-                    artFileNames,
-                    categoryCode,
+                    categoryC,
                     description,
                     orderPending,
-                    subCatCode,
                     retailerCode,
-                    awsURL
+                    awsImageUrl,
+                    licenseCode,
+                    customer,
+                    logoApplication,
+                    materialContents,
+                    addInfo,
+                    dChannel,
                 })
 
                 //form.clientScriptModulePath = "SuiteScripts/CLCIntegration/ArtApprovalSubmitCScript.js"
@@ -129,15 +113,9 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                 form.addButton({
                     id: 'custpage_CLCArtApprovalSubmit',
-                    label: 'Send Art Approval CLC',
+                    label: 'Submit',
                     functionName: `artApprovalCLCSubmit(${dataObj})`
 
-                })
-
-                form.addButton({
-                    id: "custpage_RequestImage",
-                    label: "Convert Image",
-                    functionName: 'convertImage'
                 })
 
 
