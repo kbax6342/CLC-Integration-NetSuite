@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  */
-define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidget'],
+define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidget', 'N/file'],
     /**
      * @param{record} record
      * @param{recordContext} recordContext
@@ -10,7 +10,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
      * @param{search} search
      * @param{serverWidget} serverWidget
      */
-    (record, recordContext, render, search, serverWidget) => {
+    (record, recordContext, render, search, serverWidget, file) => {
         /**
          * Defines the function definition that is executed before record is loaded.
          * @param {Object} scriptContext
@@ -27,12 +27,11 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                 const form = scriptContext.form
 
-                var rec = scriptContext.newRecord
+                const rec = scriptContext.newRecord
 
                 var color = rec.getText({
                     fieldId: "custrecord_lf_item_color"
                 })
-
 
                 var lfUpcCode = rec.getText({
                     fieldId: "custrecord_lf_item_number"
@@ -70,7 +69,6 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     fieldId: 'custrecord_lf_cat_code'
                 });
 
-
                 var description = rec.getValue({
                     fieldId: 'custrecord_lf_short_description'
                 })
@@ -87,37 +85,161 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     fieldId: 'custrecord_lf_comments_to_lic'
                 })
 
-                const dataObj = JSON.stringify({
-                    color,
-                    lfUpcCode,
-                    itemName,
-                    categoryC,
-                    description,
-                    orderPending,
-                    retailerCode,
-                    awsImageUrl,
-                    licenseCode,
-                    customer,
-                    logoApplication,
-                    materialContents,
-                    addInfo,
-                    dChannel,
+                var awsImage = rec.getValue({
+                    fieldId: 'custrecord_lf_image_display'
                 })
 
-                //form.clientScriptModulePath = "SuiteScripts/CLCIntegration/ArtApprovalSubmitCScript.js"
-
-                form.clientScriptModulePath = "SuiteScripts/CLCIntegration/httpsrequestClientScript.js"
-
-
-
-
-                form.addButton({
-                    id: 'custpage_CLCArtApprovalSubmit',
-                    label: 'Submit',
-                    functionName: `artApprovalCLCSubmit(${dataObj})`
-
+                var id = rec.getValue({
+                    fieldId: 'id'
                 })
 
+                var customId = rec.getValue({
+                    fieldId: 'custrecord_lf_clc_custom_id'
+                })
+
+                var artFileName = rec.getValue({
+                    fieldId: 'custrecord_lf_art_file_name'
+                })
+                log.debug("Art File Name", artFileName)
+
+                var alternativeImage = rec.getValue({
+                    fieldId: 'custrecord_lf_alt_artwork'
+                })
+
+
+                if(alternativeImage){
+
+                    var fileObj = file.load({
+                        id: alternativeImage
+                    });
+
+                    var imgString = fileObj.getContents();
+
+                    var fileName = fileObj.name
+
+                    const dataObj = JSON.stringify({
+                        id,
+                        color,
+                        lfUpcCode,
+                        artFileName,
+                        itemName,
+                        categoryC,
+                        description,
+                        orderPending,
+                        retailerCode,
+                        imgString,
+                        fileName,
+                        licenseCode,
+                        customer,
+                        logoApplication,
+                        materialContents,
+                        addInfo,
+                        dChannel,
+                    })
+
+                    const updateObj = JSON.stringify({
+                        id,
+                        customId,
+                        artFileName,
+                        color,
+                        lfUpcCode,
+                        itemName,
+                        categoryC,
+                        description,
+                        orderPending,
+                        retailerCode,
+                        imgString,
+                        fileName,
+                        licenseCode,
+                        customer,
+                        logoApplication,
+                        materialContents,
+                        addInfo,
+                        dChannel,
+                    })
+
+                    form.clientScriptModulePath = "SuiteScripts/CLCIntegration/httpsrequestClientScript.js"
+
+                    if(scriptContext.type === scriptContext.UserEventType.VIEW){
+
+                        form.addButton({
+                            id: 'custpage_CLCArtApprovalSubmit',
+                            label: 'Submit',
+                            functionName: `artApprovalCLCSubmit(${dataObj})`
+
+                        })
+
+                        form.addButton({
+                            id: 'custpage_CLCArtApprovalSubmit',
+                            label: 'Update',
+                            functionName: `artApprovalCLCUpdate(${updateObj})`
+
+                        })
+                    }
+
+
+
+                }else{
+                    const dataObj = JSON.stringify({
+                        id,
+                        color,
+                        lfUpcCode,
+                        artFileName,
+                        itemName,
+                        categoryC,
+                        description,
+                        orderPending,
+                        retailerCode,
+                        awsImageUrl,
+                        licenseCode,
+                        customer,
+                        logoApplication,
+                        materialContents,
+                        addInfo,
+                        dChannel,
+                    })
+
+                    const updateObj = JSON.stringify({
+                        id,
+                        customId,
+                        color,
+                        lfUpcCode,
+                        artFileName,
+                        itemName,
+                        categoryC,
+                        description,
+                        orderPending,
+                        retailerCode,
+                        imgString,
+                        fileName,
+                        licenseCode,
+                        customer,
+                        logoApplication,
+                        materialContents,
+                        addInfo,
+                        dChannel,
+                    })
+
+                    form.clientScriptModulePath = "SuiteScripts/CLCIntegration/httpsrequestClientScript.js"
+
+                    if(scriptContext.type === scriptContext.UserEventType.VIEW){
+
+                        form.addButton({
+                            id: 'custpage_CLCArtApprovalSubmit',
+                            label: 'Submit',
+                            functionName: `artApprovalCLCSubmit(${dataObj})`
+
+                        })
+
+                        // form.addButton({
+                        //     id: 'custpage_CLCArtApprovalSubmit',
+                        //     label: 'Update',
+                        //     functionName: `artApprovalCLCUpdate(${updateObj})`
+                        //
+                        // })
+                    }
+
+                }
 
 
             } catch (e) {
