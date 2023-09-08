@@ -2,7 +2,7 @@
  * @NApiVersion 2.1
  * @NScriptType UserEventScript
  */
-define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidget', 'N/file'],
+define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidget', 'N/file', 'N/query'],
     /**
      * @param{record} record
      * @param{recordContext} recordContext
@@ -10,7 +10,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
      * @param{search} search
      * @param{serverWidget} serverWidget
      */
-    (record, recordContext, render, search, serverWidget, file) => {
+    (record, recordContext, render, search, serverWidget, file, query) => {
         /**
          * Defines the function definition that is executed before record is loaded.
          * @param {Object} scriptContext
@@ -29,11 +29,32 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                 const rec = scriptContext.newRecord
 
-                var color = rec.getText({
+                rec.setValue({
+                    fieldId: 'custrecord_lf_clc_custom_id',
+                    value: 0
+                })
+
+
+                //retrieving color name
+                const colorNumber = rec.getValue({
                     fieldId: "custrecord_lf_item_color"
                 })
 
-                var lfUpcCode = rec.getText({
+                let queryString = `SELECT * FROM customlist371`;
+
+                const queryResults = query.runSuiteQL({
+                    query: queryString
+                }).asMappedResults();
+
+
+                const color = queryResults.find((colorItem) => colorItem.id = colorNumber).name;
+
+                var idRecord = rec.getValue({
+                    fieldId: 'internalid'
+                })
+
+
+                var lfUpcCode = rec.getValue({
                     fieldId: "custrecord_lf_item_number"
                 })
 
@@ -51,7 +72,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                 var logoApplication = rec.getText({
                     fieldId: 'custrecord_lf_logo_application'
-                })
+               })
 
                 var materialContents = rec.getText({
                     fieldId: 'custrecord_lf_material_contents'
@@ -63,7 +84,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                 var licenseCode = rec.getText({
                     fieldId: 'custrecord_lf_roy_code'
-                })
+               })
 
                 var categoryC = rec.getValue({
                     fieldId: 'custrecord_lf_cat_code'
@@ -89,22 +110,26 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     fieldId: 'custrecord_lf_image_display'
                 })
 
+
                 var id = rec.getValue({
                     fieldId: 'id'
                 })
 
-                var customId = rec.getValue({
-                    fieldId: 'custrecord_lf_clc_custom_id'
-                })
 
                 var artFileName = rec.getValue({
                     fieldId: 'custrecord_lf_art_file_name'
                 })
-                log.debug("Art File Name", artFileName)
+
 
                 var alternativeImage = rec.getValue({
                     fieldId: 'custrecord_lf_alt_artwork'
                 })
+
+
+                var customId = rec.getValue({
+                    fieldId:'custrecord_lf_clc_custom_id'
+                })
+
 
 
                 if(alternativeImage){
@@ -121,6 +146,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                         id,
                         color,
                         lfUpcCode,
+                        customId,
                         artFileName,
                         itemName,
                         categoryC,
@@ -140,8 +166,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     const updateObj = JSON.stringify({
                         id,
                         customId,
-                        artFileName,
-                        color,
+                        artFileName, color,
                         lfUpcCode,
                         itemName,
                         categoryC,
@@ -169,13 +194,15 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                         })
 
-                        form.addButton({
-                            id: 'custpage_CLCArtApprovalSubmit',
-                            label: 'Update',
-                            functionName: `artApprovalCLCUpdate(${updateObj})`
-
-                        })
+                        // form.addButton({
+                        //     id: 'custpage_CLCArtApprovalSubmit',
+                        //     label: 'Update',
+                        //     functionName: `artApprovalCLCUpdate(${updateObj})`
+                        //
+                        // })
                     }
+
+
 
 
 
@@ -183,6 +210,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     const dataObj = JSON.stringify({
                         id,
                         color,
+                        customId,
                         lfUpcCode,
                         artFileName,
                         itemName,
@@ -239,6 +267,8 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                         // })
                     }
 
+
+
                 }
 
 
@@ -258,6 +288,9 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
          * @since 2015.2
          */
         const beforeSubmit = (scriptContext) => {
+
+
+
 
 
         }

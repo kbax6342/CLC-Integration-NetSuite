@@ -3,11 +3,11 @@
  * @NScriptType ClientScript
  * @NModuleScope SameAccount
  */
-define(['N/https','N/ui/message', 'N/record'],
+define(['N/https','N/ui/message', 'N/record', 'N/currentRecord'],
     /**
      * @param{https} https
      */
-    function (https, message, record) {
+    function (https, message, record, currentRecord) {
 
         /**
          * Function to be executed after page is initialized.
@@ -31,6 +31,7 @@ define(['N/https','N/ui/message', 'N/record'],
                     }
 
                     rec.setValue({fieldId: 'custrecord_lf_art_file_name', value: fileName(fileString)})
+
                     return true;
                 }
 
@@ -83,14 +84,12 @@ define(['N/https','N/ui/message', 'N/record'],
                         url: dataObj.awsImageUrl,
                         headers: headersObj
                     }), base64ImageString = response.body;
-
-
+                   //console.log(base64ImageString)
 
                 }else {
                     base64ImageString = dataObj.imgString
+                    //console.log(base64ImageString)
                 }
-
-
 
                 var liCodeText = dataObj.licenseCode
 
@@ -132,94 +131,143 @@ define(['N/https','N/ui/message', 'N/record'],
                 var categoryString =  dataObj.categoryC
                 var artFileData = base64ImageString
                 var artFileNameAWS = dataObj.artFileName
+                var id = dataObj.id
+
+
 
 
 
                 if(dataObj.awsImageUrl){
+                    console.log("Amazon url image")
 
-
-                    var artSubmitAWS = {
-                        "Description": description,
-                        "LicenseCode": lincenseCode,
-                        "DesignNo": designNo,
-                        "Colors": colors,
-                        "OrderPending": orderPending,
-                        "RetailerName": retailerName,
-                        "BlankGoods": blankGoods,
-                        "SupplierId": supplierId,
-                        "AdditionalInfo": additionalInfo,
-                        "SelectedLogoApplications": [selectedApplication],
-                        "SelectedMaterialContents": [selectedMaterials],
-                        "EmailsList": emailList,
-                        "CustomId": customId,
-                        "Upis": upis,
-                        "SelectedProductCombinations":
-                            [
-                                {
-                                    "CategoryCode": categoryCode(categoryString),
-                                    "SubcategoryCode": subCatCode(categoryString),
-                                    "DistributionChannels": [distributionChannel]
-                                }
-                            ],
-                        "ArtFileName": artFileNameAWS,
-                        "ArtFileData": artFileData
-                    }
-
-                    // console.log(artSubmitAWS)
-
-                    let submitAApproval = https.post({
-                        url: urlString,
-                        headers: headers,
-                        body: JSON.stringify(artSubmitAWS)
+                    var licenseSubRec = record.load({
+                        type: 'customrecord_lic_submission',
+                        id: id,
+                        isDynamic: true
                     });
 
+                    const customIdInt = licenseSubRec.getValue({
+                        fieldId: 'custrecord_lf_clc_custom_id'
+                    })
 
-                   var value = JSON.parse(submitAApproval.body)
+                    console.log(customIdInt)
+
+                    if(customIdInt === 0 ){
 
 
-                    if(value.ProcessingErrorsJson === null){
 
-                        let myMsg = message.create({
-                            title: 'CLC Submission',
-                            message: 'The Art Submission Was Submitted Successfully \n Please Remember to Hit Edit Button to View Submission Data',
-                            type: message.Type.CONFIRMATION
+                        var artSubmitAWS = {
+                            "Description": description,
+                            "LicenseCode": lincenseCode,
+                            "DesignNo": designNo,
+                            "Colors": colors,
+                            "OrderPending": orderPending,
+                            "RetailerName": retailerName,
+                            "BlankGoods": blankGoods,
+                            "SupplierId": supplierId,
+                            "AdditionalInfo": additionalInfo,
+                            "SelectedLogoApplications": [selectedApplication],
+                            "SelectedMaterialContents": [selectedMaterials],
+                            "EmailsList": emailList,
+                            "CustomId": customId,
+                            "Upis": upis,
+                            "SelectedProductCombinations":
+                                [
+                                    {
+                                        "CategoryCode": categoryCode(categoryString),
+                                        "SubcategoryCode": subCatCode(categoryString),
+                                        "DistributionChannels": [distributionChannel]
+                                    }
+                                ],
+                            "ArtFileName": artFileNameAWS,
+                            "ArtFileData": artFileData
+                        }
+
+                        console.log(artSubmitAWS)
+
+                        let submitAApproval = https.post({
+                            url: urlString,
+                            headers: headers,
+                            body: JSON.stringify(artSubmitAWS)
                         });
 
-                        myMsg.show({
-                            duration: 7000 // will disappear after 5s
+                        console.log(submitAApproval)
+
+                        var value = JSON.parse(submitAApproval.body)
+
+                        console.log(value)
+
+
+                        if(value.ProcessingErrorsJson === null){
+
+
+                            updateSubmission(customIdInt, value, headers)
+
+                            //location.reload();
+
+
+                        } else {
+                            let myMsg = message.create({
+                                title: 'CLC Submission',
+                                message: 'The Art Submission Was Not Submitted Successfully \n Error:' + value.ProcessingErrorsJson,
+                                type: message.Type.ERROR
+                            });
+                            myMsg.show({
+                                duration: 300000 // will disappear after 5s
+                            });
+                        }
+                    }else{
+
+
+                        var artSubmitAWS = {
+                            "Description": description,
+                            "LicenseCode": lincenseCode,
+                            "DesignNo": designNo,
+                            "Colors": colors,
+                            "OrderPending": orderPending,
+                            "RetailerName": retailerName,
+                            "BlankGoods": blankGoods,
+                            "SupplierId": supplierId,
+                            "AdditionalInfo": additionalInfo,
+                            "SelectedLogoApplications": [selectedApplication],
+                            "SelectedMaterialContents": [selectedMaterials],
+                            "EmailsList": emailList,
+                            "CustomId": customId,
+                            "Upis": upis,
+                            "SelectedProductCombinations":
+                                [
+                                    {
+                                        "CategoryCode": categoryCode(categoryString),
+                                        "SubcategoryCode": subCatCode(categoryString),
+                                        "DistributionChannels": [distributionChannel]
+                                    }
+                                ],
+                            "ArtFileName": artFileNameAWS,
+                            "ArtFileData": artFileData
+                        }
+
+                        console.log(artSubmitAWS)
+
+                        let submitAApproval = https.post({
+                            url: urlString,
+                            headers: headers,
+                            body: JSON.stringify(artSubmitAWS)
                         });
 
-                        var licenseSubRec = record.load({
-                            type: 'customrecord_lic_submission',
-                            id: dataObj.id,
-                            isDynamic: true
-                        });
+                        console.log(submitAApproval)
 
-                        licenseSubRec.setValue({
-                            fieldId: 'custrecord_lf_clc_custom_id',
-                            value: value.CustomId
-                        })
+                        var value = JSON.parse(submitAApproval.body)
 
-                        licenseSubRec.setValue({
-                            fieldId: 'custrecord_lf_submission_date',
-                            value: new  Date()
-                        })
+                        value.ProcessingErrorsJson === null ? updateSubmission(id, value, headers) : null
 
-                        licenseSubRec.save();
-                        location.reload();
 
-                    } else {
-                        let myMsg = message.create({
-                            title: 'CLC Submission',
-                            message: 'The Art Submission Was Not Submitted Successfully \n Error:' + value.ProcessingErrorsJson,
-                            type: message.Type.ERROR
-                        });
-                        myMsg.show({
-                            duration: 5000 // will disappear after 5s
-                        });
+
                     }
 
+
+
                 }else{
+                    console.log("art file alternative")
                     var artFileNameAlternative = dataObj.fileName;
 
                     var artSubmitAlternative = {
@@ -235,7 +283,7 @@ define(['N/https','N/ui/message', 'N/record'],
                         "SelectedLogoApplications": [selectedApplication],
                         "SelectedMaterialContents": [selectedMaterials],
                         "EmailsList": emailList,
-                        "CustomId": customId,
+                        "CustomId": customIdInt,
                         "Upis": upis,
                         "SelectedProductCombinations":
                             [
@@ -258,6 +306,10 @@ define(['N/https','N/ui/message', 'N/record'],
 
                     if(value.ProcessingErrorsJson === null){
 
+                        var parsedResponseBody = artApprovalCLCStatusUpdate(value.customId)
+
+
+
                         let myMsg = message.create({
                             title: 'CLC Submission',
                             message: 'The Art Submission Was Submitted Successfully \n Please Remember to Hit Edit Button to View Submission Data',
@@ -268,24 +320,49 @@ define(['N/https','N/ui/message', 'N/record'],
                             duration: 7000 // will disappear after 5s
                         });
 
+
                         var licenseSubRec = record.load({
                             type: 'customrecord_lic_submission',
                             id: dataObj.id,
                             isDynamic: true
                         });
 
+                        var customId = licenseSubRec.getValue({
+                            fieldId: 'custrecord_lf_clc_custom_id'
+                        })
+
+                        console.log(customId)
+
                         licenseSubRec.setValue({
                             fieldId: 'custrecord_lf_clc_custom_id',
                             value: value.CustomId
                         })
+
+                        var parsedResponseBody = artApprovalCLCStatusUpdate(1810012, headers)
+
+                        console.log(parsedResponseBody)
 
                         licenseSubRec.setValue({
                             fieldId: 'custrecord_lf_submission_date',
                             value: new  Date()
                         })
 
+                        //console.log(parsedResponseBody.Status)
+
+                        licenseSubRec.setValue({
+                            fieldId: 'custrecord_clc_sub_status',
+                            value: parsedResponseBody.Status
+                        })
+
+                        licenseSubRec.setValue({
+                            fieldId:'custrecord_clc_submissions_errors',
+                            value: parsedResponseBody.Errors
+                        })
+
+
                         licenseSubRec.save();
-                        location.reload();
+
+                        //location.reload();
 
                     } else {
                         let myMsg = message.create({
@@ -294,7 +371,7 @@ define(['N/https','N/ui/message', 'N/record'],
                             type: message.Type.ERROR
                         });
                         myMsg.show({
-                            duration: 5000 // will disappear after 5s
+                            duration: 300000// will disappear after 5s
                         });
                     }
 
@@ -530,7 +607,7 @@ define(['N/https','N/ui/message', 'N/record'],
                             type: message.Type.ERROR
                         });
                         myMsg.show({
-                            duration: 5000 // will disappear after 5s
+                            duration:  300000 // will disappear after 5s
                         });
                     }
 
@@ -554,6 +631,116 @@ define(['N/https','N/ui/message', 'N/record'],
             }catch (e) {
                 log.debug("Error", e)
             }
+        }
+
+        function artApprovalCLCStatusUpdate(customId){
+
+            var objData = {
+                "username": "netsuite api_12034",
+                "password": "uL#+*6m^-ig091}L@dySH:K(Q6",
+                "grant_type": "password"
+            };
+
+            let loginResponse = https.post({
+                url: apiUrl + "Token",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Cache-Control": "no-cache"
+                },
+                body: objData
+            });
+
+            //console.log(loginResponse)
+
+            var parsedData = JSON.parse(loginResponse.body)
+
+            var bearer = "bearer " + parsedData.access_token
+
+            var headers = {
+                "Content-Type": "application/json; charset=utf-8",
+                "Authorization": bearer
+            }
+
+
+
+            var response = https.get({
+                url: 'https://clientapiqa.brandmanager360.com/Artwork/GetSubmittedArtQueueByCustomId?customId=' + customId,
+                headers: headers,
+            })
+
+            var parsedResponseBody = JSON.parse(response.body)
+
+            return parsedResponseBody;
+
+
+        }
+
+        function updateSubmission(idSub, value, headers) {
+
+
+            var licenseSubRec = record.load({
+                type: 'customrecord_lic_submission',
+                id: idSub,
+                isDynamic: true
+            });
+
+
+             idSub > 0 ? licenseSubRec.setValue({
+                fieldId: 'custrecord_lf_clc_custom_id',
+                value: value.CustomId
+            }): null
+
+
+
+            var customId = licenseSubRec.getValue({
+                fieldId: 'custrecord_lf_clc_custom_id'
+            })
+
+            var parsedResponseBody = artApprovalCLCStatusUpdate(value.customId)
+
+            console.log(parsedResponseBody)
+
+            licenseSubRec.setValue({
+                fieldId: 'custrecord_lf_submission_date',
+                value: new  Date()
+            })
+
+            console.log(parsedResponseBody.Status)
+
+            licenseSubRec.setValue({
+                fieldId: 'custrecord_clc_sub_status',
+                value: JSON.stringify(parsedResponseBody.Status)
+            })
+
+            if(parsedResponseBody.Errors = null){
+
+                licenseSubRec.setValue({
+                    fieldId:'custrecord_clc_submissions_errors',
+                    value: "There are no Errors"
+                })
+            }else{
+
+                licenseSubRec.setValue({
+                    fieldId:'custrecord_clc_submissions_errors',
+                    value: JSON.stringify(parsedResponseBody.Errors)
+                })
+            }
+
+            licenseSubRec.save();
+            //location.reload();
+
+            let myMsg = message.create({
+                title: 'CLC Submission',
+                message: 'The Art Submission Was Submitted Successfully \n Please Remember to Hit Edit Button to View Submission Data',
+                type: message.Type.CONFIRMATION
+            });
+
+            myMsg.show({
+                duration: 7000 // will disappear after 5s
+            });
+
+
+
         }
 
 
@@ -692,6 +879,7 @@ define(['N/https','N/ui/message', 'N/record'],
 
 
         return {
+            artApprovalCLCStatusUpdate: artApprovalCLCStatusUpdate,
             artApprovalCLCUpdate: artApprovalCLCUpdate,
             artApprovalCLCSubmit: artApprovalCLCSubmit,
             pageInit: pageInit,
