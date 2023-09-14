@@ -53,7 +53,6 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     fieldId: 'internalid'
                 })
 
-
                 var lfUpcCode = rec.getValue({
                     fieldId: "custrecord_lf_item_number"
                 })
@@ -110,16 +109,13 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                     fieldId: 'custrecord_lf_image_display'
                 })
 
-
                 var id = rec.getValue({
                     fieldId: 'id'
                 })
 
-
                 var artFileName = rec.getValue({
                     fieldId: 'custrecord_lf_art_file_name'
                 })
-
 
                 var alternativeImage = rec.getValue({
                     fieldId: 'custrecord_lf_alt_artwork'
@@ -129,7 +125,6 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
                 var customId = rec.getValue({
                     fieldId:'custrecord_lf_clc_custom_id'
                 })
-
 
 
                 if(alternativeImage){
@@ -194,12 +189,6 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                         })
 
-                        // form.addButton({
-                        //     id: 'custpage_CLCArtApprovalSubmit',
-                        //     label: 'Update',
-                        //     functionName: `artApprovalCLCUpdate(${updateObj})`
-                        //
-                        // })
                     }
 
 
@@ -259,12 +248,7 @@ define(['N/record', 'N/recordContext', 'N/render', 'N/search', 'N/ui/serverWidge
 
                         })
 
-                        // form.addButton({
-                        //     id: 'custpage_CLCArtApprovalSubmit',
-                        //     label: 'Update',
-                        //     functionName: `artApprovalCLCUpdate(${updateObj})`
-                        //
-                        // })
+
                     }
 
 
